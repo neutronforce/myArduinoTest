@@ -14,6 +14,9 @@ const int FRONT = 2;
 const int BACK = 8;
 
 int lastMove = 0;
+int moveTime = 0;
+
+boolean soundActive = false;
 
 IRrecv irrecv(IR);    
 decode_results results;    
@@ -28,34 +31,40 @@ void setup() {
   Serial.println("Ready"); 
 }
 
-void move(int duration, int pwm, int left, int right) {
+void move(int pwm, int left, int right) {
   digitalWrite(M1, left);
   digitalWrite(M2, right);
   analogWrite(E1, pwm);
   analogWrite(E2, pwm);
-  delay(duration);
+}
+
+void stop() {
   analogWrite(E1, 0);
   analogWrite(E2, 0);
 }
 
 void moveForward(){
+  moveTime = 20000;
   lastMove = FRONT;
-  move(1000, 255, HIGH, HIGH);  //FORWARD
+  move(255, HIGH, HIGH);  //FORWARD 
 }
 
 void moveLeft(){
+  moveTime = 10000;
   lastMove = LEFT;
-  move(200, 255, LOW, HIGH); //LEFT
+  move(255, LOW, HIGH); //LEFT
 }
 
 void moveRight(){
+  moveTime = 10000;
   lastMove = RIGHT;
-  move(200, 255, HIGH, LOW);  //RIGHT    
+  move(255, HIGH, LOW);  //RIGHT    
 }
 
 void moveBack(){
+  moveTime = 20000;
   lastMove = BACK;
-  move(1000, 255, LOW, LOW);   //BACK   
+  move(255, LOW, LOW);   //BACK   
 }
 
 void repeatLast(){
@@ -69,19 +78,24 @@ void repeatLast(){
 }
 
 void weaponOn(){
-  lastMove = 0;
   digitalWrite(WP,HIGH);
 }
 
 void weaponOff(){
   lastMove = 0;
+  moveTime = 0;
   digitalWrite(WP, LOW);
 }
 
 void makeSound(){
-  analogWrite(SPKR, 128);
-  delay(250);
-  digitalWrite(SPKR, LOW);
+  if(soundActive){
+     soundActive = false;
+     digitalWrite(SPKR, LOW);
+  }
+  else {
+     soundActive = true;
+     analogWrite(SPKR, 128);
+  }
 }
 
 void translateIR() {
@@ -113,7 +127,6 @@ void translateIR() {
     case 0xFF906F:
       Serial.println("UP");    
       break;
-    
     
     case 0xFF6897: 
     case 0x20DF08F7:
@@ -175,5 +188,8 @@ void loop() {
     for(int z = 0; z < 2; z++){ //ignore the repeated codes
       irrecv.resume(); // receive the next value  
     }
-  }  
+  }
+  else if(--moveTime <= 0){
+     stop();
+  }
 }
