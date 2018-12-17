@@ -46,7 +46,7 @@ void stop() {
 
 void moveFrontLeft(){
   lastMove = FL;
-  move(155, 255, HIGH, HIGH);  
+  move(125, 255, HIGH, HIGH);  
 }
 
 void moveForward(){
@@ -56,7 +56,7 @@ void moveForward(){
 
 void moveFrontRight(){
   lastMove = FR;
-  move(255, 155, HIGH, HIGH);  
+  move(255, 125, HIGH, HIGH);  
 }
 
 void moveLeft(){
