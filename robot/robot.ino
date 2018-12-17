@@ -16,8 +16,6 @@ const int BACK = 8;
 int lastMove = 0;
 int moveTime = 0;
 
-boolean soundActive = false;
-
 IRrecv irrecv(IR);    
 decode_results results;    
 
@@ -75,6 +73,7 @@ void repeatLast(){
 }
 
 void weaponOn(){
+  digitalWrite(SPKR, 128);
   digitalWrite(WP,HIGH);
 }
 
@@ -82,17 +81,7 @@ void weaponOff(){
   lastMove = 0;
   moveTime = 0;
   digitalWrite(WP, LOW);
-}
-
-void makeSound(){
-  if(soundActive){
-     soundActive = false;
-     digitalWrite(SPKR, LOW);
-  }
-  else {
-     soundActive = true;
-     analogWrite(SPKR, 128);
-  }
+  analogWrite(SPKR, LOW);
 }
 
 void translateIR() {
@@ -133,7 +122,6 @@ void translateIR() {
     case 0xFF30CF: 
     case 0x20DF8877:
       Serial.println("1"); 
-      weaponOn();   
       break;
     case 0xFF18E7: 
     case 0x20DF48B7:
@@ -151,7 +139,7 @@ void translateIR() {
     case 0xFF38C7: 
     case 0x20DFA857:
       Serial.println("5");
-      makeSound();
+      weaponOn();  
       break;
     case 0xFF5AA5:
     case 0x20DF6897: 
