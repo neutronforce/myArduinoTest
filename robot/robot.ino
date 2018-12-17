@@ -8,13 +8,15 @@ int WP = 8; //FAN
 int SPKR = 10; //PIEZO
 int IR = 11; 
 
+const int FL = 1;
+const int FRONT = 2;
+const int FR = 3;
 const int LEFT = 4;
 const int RIGHT = 6;
-const int FRONT = 2;
 const int BACK = 8;
 
 int lastMove = 0;
-int moveTime = 0;
+long moveTime = 0;
 
 IRrecv irrecv(IR);    
 decode_results results;    
@@ -29,12 +31,12 @@ void setup() {
   Serial.println("Ready"); 
 }
 
-void move(int pwm, int left, int right) {
-  moveTime = 20000;
+void move(int pwmL, int pwmR, int left, int right) {
+  moveTime = 50000L;
   digitalWrite(M1, left);
   digitalWrite(M2, right);
-  analogWrite(E1, pwm);
-  analogWrite(E2, pwm);
+  analogWrite(E1, pwmL);
+  analogWrite(E2, pwmR);
 }
 
 void stop() {
@@ -42,29 +44,41 @@ void stop() {
   analogWrite(E2, 0);
 }
 
+void moveFrontLeft(){
+  lastMove = FL;
+  move(155, 255, HIGH, HIGH);  
+}
+
 void moveForward(){
   lastMove = FRONT;
-  move(255, HIGH, HIGH);  //FORWARD 
+  move(255, 255, HIGH, HIGH);  //FORWARD 
+}
+
+void moveFrontRight(){
+  lastMove = FR;
+  move(255, 155, HIGH, HIGH);  
 }
 
 void moveLeft(){
   lastMove = LEFT;
-  move(255, LOW, HIGH); //LEFT
+  move(255, 255, LOW, HIGH); //LEFT
 }
 
 void moveRight(){
   lastMove = RIGHT;
-  move(255, HIGH, LOW);  //RIGHT    
+  move(255, 255, HIGH, LOW);  //RIGHT    
 }
 
 void moveBack(){
   lastMove = BACK;
-  move(255, LOW, LOW);   //BACK   
+  move(255, 255, LOW, LOW);   //BACK   
 }
 
 void repeatLast(){
   switch(lastMove){
+    case FL: moveFrontLeft(); break;
     case FRONT: moveForward(); break;
+    case FR: moveFrontRight(); break;
     case BACK: moveBack(); break;
     case LEFT: moveLeft(); break;
     case RIGHT: moveRight(); break;
@@ -73,15 +87,15 @@ void repeatLast(){
 }
 
 void weaponOn(){
-  digitalWrite(SPKR, 128);
-  digitalWrite(WP,HIGH);
+  analogWrite(SPKR, 128);
+  digitalWrite(WP, HIGH);
 }
 
 void weaponOff(){
   lastMove = 0;
   moveTime = 0;
   digitalWrite(WP, LOW);
-  analogWrite(SPKR, LOW);
+  digitalWrite(SPKR, LOW);
 }
 
 void translateIR() {
@@ -122,6 +136,7 @@ void translateIR() {
     case 0xFF30CF: 
     case 0x20DF8877:
       Serial.println("1"); 
+      moveFrontLeft();
       break;
     case 0xFF18E7: 
     case 0x20DF48B7:
@@ -129,7 +144,9 @@ void translateIR() {
       moveForward();    
       break;
     case 0xFF7A85: 
-      Serial.println("3");    
+    case 0x20DFC837:
+      Serial.println("3");  
+      moveFrontRight();  
       break;
     case 0xFF10EF: 
     case 0x20DF28D7:
