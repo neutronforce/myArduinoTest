@@ -32,6 +32,7 @@ void setup() {
 }
 
 void move(int pwm, int left, int right) {
+  moveTime = 20000;
   digitalWrite(M1, left);
   digitalWrite(M2, right);
   analogWrite(E1, pwm);
@@ -44,25 +45,21 @@ void stop() {
 }
 
 void moveForward(){
-  moveTime = 20000;
   lastMove = FRONT;
   move(255, HIGH, HIGH);  //FORWARD 
 }
 
 void moveLeft(){
-  moveTime = 10000;
   lastMove = LEFT;
   move(255, LOW, HIGH); //LEFT
 }
 
 void moveRight(){
-  moveTime = 10000;
   lastMove = RIGHT;
   move(255, HIGH, LOW);  //RIGHT    
 }
 
 void moveBack(){
-  moveTime = 20000;
   lastMove = BACK;
   move(255, LOW, LOW);   //BACK   
 }
@@ -185,9 +182,7 @@ void loop() {
   if (irrecv.decode(&results)) // have we received an IR signal?
   {
     translateIR(); 
-    for(int z = 0; z < 2; z++){ //ignore the repeated codes
-      irrecv.resume(); // receive the next value  
-    }
+    irrecv.resume(); // receive the next value  
   }
   else if(--moveTime <= 0){
      stop();
