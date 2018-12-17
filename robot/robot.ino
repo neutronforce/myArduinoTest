@@ -32,7 +32,6 @@ void setup() {
 }
 
 void move(int pwmL, int pwmR, int left, int right) {
-  moveTime = 50000L;
   digitalWrite(M1, left);
   digitalWrite(M2, right);
   analogWrite(E1, pwmL);
@@ -45,31 +44,37 @@ void stop() {
 }
 
 void moveFrontLeft(){
+  moveTime = 50000L;
   lastMove = FL;
   move(125, 255, HIGH, HIGH);  
 }
 
 void moveForward(){
+  moveTime = 50000L;
   lastMove = FRONT;
   move(255, 255, HIGH, HIGH);  //FORWARD 
 }
 
 void moveFrontRight(){
+  moveTime = 50000L;
   lastMove = FR;
   move(255, 125, HIGH, HIGH);  
 }
 
 void moveLeft(){
+  moveTime = 30000L;
   lastMove = LEFT;
   move(255, 255, LOW, HIGH); //LEFT
 }
 
 void moveRight(){
+  moveTime = 30000L;
   lastMove = RIGHT;
   move(255, 255, HIGH, LOW);  //RIGHT    
 }
 
 void moveBack(){
+  moveTime = 50000L;
   lastMove = BACK;
   move(255, 255, LOW, LOW);   //BACK   
 }
