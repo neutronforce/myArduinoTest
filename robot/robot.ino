@@ -1,7 +1,9 @@
 #include "IRremote.h"
-
-int E1 = 5;  
+#include "SR04.h"
+int TRIG = 2;
+int ECHO = 3;
 int M1 = 4; //LEFT
+int E1 = 5;  
 int E2 = 6;                      
 int M2 = 7; //RIGHT
 int WP = 8; //FAN
@@ -14,12 +16,17 @@ const int FR = 3;
 const int LEFT = 4;
 const int RIGHT = 6;
 const int BACK = 8;
+const int AUTO = 11;
 
 int lastMove = 0;
 long moveTime = 0;
+int echoDist = 0;
+long nextEcho = 0;
 
 IRrecv irrecv(IR);    
 decode_results results;    
+
+SR04 sr04 = SR04(ECHO,TRIG);
 
 void setup() {
   Serial.begin(9600);
@@ -79,6 +86,15 @@ void moveBack(){
   move(255, 255, LOW, LOW);   //BACK   
 }
 
+void moveAuto(){
+    lastMove = AUTO;
+    if(--nextEcho <= 0){
+      nextEcho = 30000L;
+      echoDist = sr04.Distance();
+      Serial.println(echoDist);   
+    }   
+}
+
 void repeatLast(){
   switch(lastMove){
     case FL: moveFrontLeft(); break;
@@ -99,6 +115,7 @@ void weaponOn(){
 void weaponOff(){
   lastMove = 0;
   moveTime = 0;
+  nextEcho = 0;
   digitalWrite(WP, LOW);
   digitalWrite(SPKR, LOW);
 }
@@ -108,9 +125,11 @@ void translateIR() {
   
   switch(results.value)  {
     case 0xFFA25D: 
+    case 0x20DF10EF:
       Serial.println("POWER"); 
+      moveAuto();
       break;
-    
+   
     case 0xFF629D: 
       Serial.println("VOL+"); 
       break;
@@ -193,6 +212,9 @@ void loop() {
   {
     translateIR(); 
     irrecv.resume(); // receive the next value  
+  }
+  else if(lastMove == AUTO){
+    moveAuto();    
   }
   else if(--moveTime <= 0){
      stop();
