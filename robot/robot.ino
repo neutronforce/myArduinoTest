@@ -89,9 +89,18 @@ void moveBack(){
 void moveAuto(){
     lastMove = AUTO;
     if(--nextEcho <= 0){
-      nextEcho = 30000L;
+      nextEcho = 3000L;
       echoDist = sr04.Distance();
-      Serial.println(echoDist);   
+      //Serial.println(echoDist);
+      if(echoDist < 10){
+          move(255, 255, LOW, LOW);   //BACK
+      } 
+      else if(echoDist < 20){
+          move(255, 255, HIGH, LOW);  //RIGHT
+      }
+      else {
+          move(255, 255, HIGH, HIGH);  //FORWARD
+      }
     }   
 }
 
