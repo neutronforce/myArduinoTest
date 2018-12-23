@@ -92,11 +92,14 @@ void moveAuto(){
       nextEcho = 3000L;
       echoDist = sr04.Distance();
       //Serial.println(echoDist);
-      if(echoDist < 10){
+      if(echoDist < 12){
+          weaponOff();  //safety
           move(255, 255, LOW, LOW);   //BACK
+          nextEcho = 50000L;
       } 
       else if(echoDist < 20){
           move(255, 255, HIGH, LOW);  //RIGHT
+          nextEcho = 100000L;  //need enough time to turn around
       }
       else {
           move(255, 255, HIGH, HIGH);  //FORWARD
