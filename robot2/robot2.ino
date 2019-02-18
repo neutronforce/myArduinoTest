@@ -20,7 +20,7 @@ void setup() {
   pinMode(DRV,OUTPUT);
   pinMode(DFWD,OUTPUT);
   pinMode(DREV,OUTPUT);
-  attachInterrupt(1, readRemote, CHANGE); 
+  attachInterrupt(1, readRemote, RISING); 
   pinMode(RA, INPUT);
   pinMode(RB, INPUT);
   pinMode(RC, INPUT);
@@ -39,6 +39,10 @@ void loop() {
       digitalWrite(DREV, LOW);
       digitalWrite(DFWD, HIGH);  
     }
+    else if(drive == BACK){
+      digitalWrite(DREV, HIGH);
+      digitalWrite(DFWD, LOW);  
+    }
   }
 }
 
@@ -53,6 +57,12 @@ void readRemote(){
     }
   }
   else if(digitalRead(RD) == HIGH){
-    
+    Serial.println("BUTTON D");
+    if(drive == NONE){
+      drive = BACK;
+    }
+    else if(drive == BACK) {
+      drive = NONE;
+    }
   }
 }
