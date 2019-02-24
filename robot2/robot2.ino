@@ -1,14 +1,15 @@
 #include <Servo.h>
 
-#define RT 2
-#define TURN 3
+#define RT 3
+
 #define DFWD 4
 #define DREV 5
 #define DRV 6
-#define RD 7
-#define RC 8
-#define RB 9
-#define RA 10
+#define TURN 10
+#define RD 14
+#define RC 15
+#define RB 16
+#define RA 17
 
 const int NONE = 0;
 const int FRONT = 2;
@@ -17,41 +18,49 @@ const int RIGHT = 6;
 const int BACK = 8;
 
 int drive = 0;
+int drivePrev = 0;
 int pos = 90;
+int posPrev = 0;
 
-Servo myservo;
+//Servo myservo;
  
 void setup() {
   Serial.begin(9600);
   pinMode(DRV,OUTPUT);
   pinMode(DFWD,OUTPUT);
   pinMode(DREV,OUTPUT);
-  attachInterrupt(0, readRemote, RISING); 
+  attachInterrupt(1, readRemote, RISING); 
   pinMode(RA, INPUT);
   pinMode(RB, INPUT);
   pinMode(RC, INPUT);
   pinMode(RD, INPUT);
- // myservo.attach(TURN);
+//  myservo.attach(TURN);
   
 }
 
 void loop() {
-  //myservo.write(pos);
-  
-  if(drive == NONE){
-    digitalWrite(DRV, LOW);
-    digitalWrite(DREV, LOW);
-    digitalWrite(DFWD, LOW);  
+  if(pos != posPrev){
+    posPrev = pos;
+//    myservo.write(pos);  
   }
-  else {
-    digitalWrite(DRV, HIGH);
-    if(drive == FRONT){
+
+  if(drive != drivePrev){
+    drivePrev = drive;
+    if(drive == NONE){
+      digitalWrite(DRV, LOW);
       digitalWrite(DREV, LOW);
-      digitalWrite(DFWD, HIGH);  
-    }
-    else if(drive == BACK){
-      digitalWrite(DREV, HIGH);
       digitalWrite(DFWD, LOW);  
+    }
+    else {
+      digitalWrite(DRV, HIGH);
+      if(drive == FRONT){
+        digitalWrite(DREV, LOW);
+        digitalWrite(DFWD, HIGH);  
+      }
+      else if(drive == BACK){
+        digitalWrite(DREV, HIGH);
+        digitalWrite(DFWD, LOW);  
+      }
     }
   }
 }
@@ -75,13 +84,13 @@ void readRemote(){
       drive = NONE;
     }
   }
-  else if(digitalRead(RA) == HIGH){
-    Serial.println("BUTTON A");
+  else if(digitalRead(RB) == HIGH){
+    Serial.println("BUTTON B");
     pos -= 30;  
     if(pos < 0) pos = 0;
   }
-  else if(digitalRead(RB) == HIGH){
-    Serial.println("BUTTON B");
+  else if(digitalRead(RA) == HIGH){
+    Serial.println("BUTTON A");
     pos += 30;  
     if(pos > 180) pos = 180;
   }
