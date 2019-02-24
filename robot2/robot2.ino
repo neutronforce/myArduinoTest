@@ -19,10 +19,10 @@ const int BACK = 8;
 
 int drive = 0;
 int drivePrev = 0;
-int pos = 90;
+int pos = 0;
 int posPrev = 0;
 
-//Servo myservo;
+Servo myservo;
  
 void setup() {
   Serial.begin(9600);
@@ -34,14 +34,17 @@ void setup() {
   pinMode(RB, INPUT);
   pinMode(RC, INPUT);
   pinMode(RD, INPUT);
-//  myservo.attach(TURN);
-  
 }
 
 void loop() {
   if(pos != posPrev){
     posPrev = pos;
-//    myservo.write(pos);  
+    myservo.attach(TURN);
+    myservo.write(pos); 
+    delay(500);
+    Serial.print("Servo at: ");
+    Serial.println(myservo.read());
+    myservo.detach(); 
   }
 
   if(drive != drivePrev){
@@ -86,13 +89,11 @@ void readRemote(){
   }
   else if(digitalRead(RB) == HIGH){
     Serial.println("BUTTON B");
-    pos -= 30;  
-    if(pos < 0) pos = 0;
+    pos = 0;
   }
   else if(digitalRead(RA) == HIGH){
     Serial.println("BUTTON A");
-    pos += 30;  
-    if(pos > 180) pos = 180;
+    pos = 180;
   }
   Serial.print(drive);
   Serial.print(" ");
