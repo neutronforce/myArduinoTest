@@ -16,14 +16,14 @@
 
 const int NONE = 0;
 const int FRONT = 2;
-const int FRONT_ATTACK = 4;
 const int BACK = 6;
-const int BACK_ATTACK = 8;
 
 int drive = 0;
 int drivePrev = 0;
 int pos = 0;
 int posPrev = 0;
+int weapon = 0;
+int weaponPrev = 0;
 
 Servo myservo;
  
@@ -59,9 +59,6 @@ void loop() {
       digitalWrite(DRV, LOW);
       digitalWrite(DREV, LOW);
       digitalWrite(DFWD, LOW);  
-      digitalWrite(WPN, LOW);
-      digitalWrite(WREV, LOW);
-      digitalWrite(WFWD, LOW)
     }
     else {
       digitalWrite(DRV, HIGH);
@@ -73,21 +70,26 @@ void loop() {
         digitalWrite(DREV, HIGH);
         digitalWrite(DFWD, LOW);  
       }
-      else {
+    }
+  }
+
+  if(weapon != weaponPrev){
+    weaponPrev = weapon;
+    if(weapon == NONE){
+      digitalWrite(WPN, LOW);
+      digitalWrite(WREV, LOW);
+      digitalWrite(WFWD, LOW);
+    }
+    else {
         digitalWrite(WPN, HIGH);
-        if(drive == FRONT_ATTACK){
-          digitalWrite(DREV, LOW);
-          digitalWrite(DFWD, HIGH);  
+        if(weapon == FRONT){
           digitalWrite(WREV, LOW);
           digitalWrite(WFWD, HIGH);  
         }
-        else if(drive == BACK_ATTACK){
-          digitalWrite(DREV, HIGH);
-          digitalWrite(DFWD, LOW);
+        else if(weapon == BACK){
           digitalWrite(WREV, LOW);
           digitalWrite(WFWD, HIGH);    
         } 
-      }
     }
   }
 }
@@ -98,14 +100,8 @@ void readRemote(){
     if(drive == NONE){
       drive = FRONT;
     }
-    else if(drive == BACK || drive == BACK_ATTACK) {
+    else if(drive == BACK) {
       drive = NONE;
-    }
-    else if(drive == FRONT){
-      drive = FRONT_ATTACK;
-    }
-    else if(drive == FRONT_ATTACK){
-      drive = FRONT;
     }
   }
   else if(digitalRead(RD) == HIGH){
@@ -113,23 +109,33 @@ void readRemote(){
     if(drive == NONE){
       drive = BACK;
     }
-    else if(drive == FRONT || drive == FRONT_ATTACK) {
+    else if(drive == FRONT) {
       drive = NONE;
-    }
-    else if(drive == BACK){
-      drive = BACK_ATTACK;
-    }
-    else if(drive == BACK_ATTACK){
-      drive = BACK;
     }
   }
   else if(digitalRead(RB) == HIGH){
     Serial.println("BUTTON B");
-    pos = 0;
+    if(pos > 0){
+      pos = 0;  
+    }
+    else {
+      pos = 180;
+    }
   }
   else if(digitalRead(RA) == HIGH){
     Serial.println("BUTTON A");
-    pos = 180;
+    if(weapon == NONE){
+      if(drive != NONE)
+      {
+         weapon = drive;
+      }
+      else {
+        weapon = FRONT;
+      }
+    }
+    else{
+      weapon = NONE;
+    }
   }
   Serial.print(drive);
   Serial.print(" ");
