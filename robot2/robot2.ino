@@ -100,7 +100,7 @@ void readRemote(){
     if(drive == NONE){
       drive = FRONT;
     }
-    else if(drive == BACK) {
+    else {
       drive = NONE;
     }
   }
@@ -109,7 +109,7 @@ void readRemote(){
     if(drive == NONE){
       drive = BACK;
     }
-    else if(drive == FRONT) {
+    else {
       drive = NONE;
     }
   }
