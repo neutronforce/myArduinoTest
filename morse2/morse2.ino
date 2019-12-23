@@ -13,16 +13,16 @@
 #define Y    A4
 #define X    A5
 
-#define CURSOR_LIFE 5000
-
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
-int cursorX, cursorY = 0;
-int cursorOn = CURSOR_LIFE;
-
-int textX[4] = {matrix.width(), matrix.width(), matrix.width(), matrix.width()};
-
+int textX[4] = {};
+String text1 = "";
+String text2 = "";
+String text3 = "";
+String text4 = "";
+int nLine = 0;
 int nColor = 0;
+boolean updateScreen = true;
 
 void fillBlack() {
   matrix.fillScreen(matrix.Color333(0, 0, 0));
@@ -92,11 +92,23 @@ void setup() {
 
 void loop() {
   checkColor();
-  printCursor();
+  refresh();
 }
 
 void refresh() {
-  fillBlack();
+  if(updateScreen){
+    updateScreen = false;
+    fillBlack();
+    refreshLine(0, text1, textX[0]);
+    refreshLine(1, text2, textX[1]);
+    refreshLine(2, text3, textX[2]);
+    refreshLine(3, text4, textX[3]);
+  }
+}
+
+void refreshLine(int lineNum, String text, int pos){
+  matrix.setCursor(0,lineNum);
+  matrix.println(text);
 }
 
 void checkColor() {
@@ -106,20 +118,5 @@ void checkColor() {
       nColor = 0;
     }
     (*setColor[nColor])();
-    cursorOn = CURSOR_LIFE;
-  }
-}
-
-void printCursor() {
-  if (cursorOn > 0) {
-    matrix.setCursor(cursorX, cursorY);
-    //Serial.println(cursorOn);
-    if((--cursorOn) > 0){
-      matrix.print("_");      
-    }
-    else {
-      //Serial.println("blank");
-      refresh();
-    }
   }
 }
