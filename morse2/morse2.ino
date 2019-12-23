@@ -3,120 +3,147 @@
 #define CLK  8
 #define OE   9
 #define LAT  10
-#define DOT  11
-#define DASH 12
-#define MODE 13
+#define DOTB  11
+#define DASHB 12
+#define JOYB 13
 #define A    A0
 #define B    A1
 #define C    A2
 #define D    A3
-#define Y    A4
-#define X    A5
+#define YB    A4
+#define XB    A5
+
+#define PAUSE 250
+#define DOT "."
+#define DASH "-"
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
-int textX[4] = {};
-String text1 = "";
-String text2 = "";
-String text3 = "";
-String text4 = "";
-int nLine = 0;
-int nColor = 0;
-boolean updateScreen = true;
-
-void fillBlack() {
-  matrix.fillScreen(matrix.Color333(0, 0, 0));
-}
-
-void setWhite() {
-  matrix.setTextColor(matrix.Color333(7, 7, 7));
-}
-
-void setYellow() {
-  matrix.setTextColor(matrix.Color333(7, 7, 0));
-}
-
-void setOrange() {
-  matrix.setTextColor(matrix.Color333(7, 4, 0));
-}
-
-void setPink() {
-  matrix.setTextColor(matrix.Color333(7, 0, 4));
-}
-
-void setAqua() {
-  matrix.setTextColor(matrix.Color333(0, 7, 7));
-}
-
-void setBlue() {
-  matrix.setTextColor(matrix.Color333(0, 0, 7));
-}
-
-void setNavy() {
-  matrix.setTextColor(matrix.Color333(0, 0, 4));
-}
-
-void setMagenta() {
-  matrix.setTextColor(matrix.Color333(7, 0, 7));
-}
-
-void setPurple() {
-  matrix.setTextColor(matrix.Color333(4, 0, 4));
-}
-
-void setRed() {
-  matrix.setTextColor(matrix.Color333(7, 0, 0));
-}
-
-void setGreen() {
-  matrix.setTextColor(matrix.Color333(0, 7, 0));
-}
-
-#define COLORS 11
-void (*setColor[COLORS])() = {setWhite, setYellow, setOrange, setRed, setPink, setAqua, setBlue, setNavy, setMagenta, setPurple, setGreen};
+String morse = "";
+int pause = 0;
+int dotBtn = HIGH;
+int dashBtn = HIGH;
+int hue = 0;
 
 void setup() {
-  Serial.begin(9600);
-  
+  //Serial.begin(9600);
   matrix.begin();
-  fillBlack();
-  setWhite();
+  matrix.fillScreen(matrix.Color333(0, 0, 0));
   matrix.setCursor(0, 0);
   matrix.setTextSize(1);
-  matrix.setTextWrap(false);
+  matrix.setTextWrap(true);
 
-  pinMode(DOT, INPUT_PULLUP);
-  pinMode(DASH, INPUT_PULLUP);
-  pinMode(MODE, INPUT_PULLUP);
+  pinMode(DOTB, INPUT_PULLUP);
+  pinMode(DASHB, INPUT_PULLUP);
+  pinMode(JOYB, INPUT_PULLUP);
 }
 
 void loop() {
-  checkColor();
-  refresh();
+  checkMorse();
 }
 
-void refresh() {
-  if(updateScreen){
-    updateScreen = false;
-    fillBlack();
-    refreshLine(0, text1, textX[0]);
-    refreshLine(1, text2, textX[1]);
-    refreshLine(2, text3, textX[2]);
-    refreshLine(3, text4, textX[3]);
-  }
-}
 
-void refreshLine(int lineNum, String text, int pos){
-  matrix.setCursor(0,lineNum);
-  matrix.println(text);
-}
-
-void checkColor() {
-  int modeButton = digitalRead(MODE);
-  if (modeButton == LOW) {
-    if ((++nColor) >= COLORS) {
-      nColor = 0;
+void checkMorse() {
+  if (pause > 0)
+  {
+    if ((--pause) == 0) {
+      readMorse(morse);
+      morse = "";
     }
-    (*setColor[nColor])();
   }
+  int prevDotState = dotBtn;
+  int prevDashState = dashBtn;
+  dotBtn = digitalRead(DOTB);
+  dashBtn = digitalRead(DASHB);
+  if (dotBtn == LOW && dotBtn != prevDotState) {
+    pause = PAUSE;
+    morse += DOT;
+  }
+  else if (dashBtn == LOW && dashBtn != prevDotState) {
+    pause = PAUSE;
+    morse += DASH;
+  }
+}
+
+void appendChar(String c) {
+  matrix.setTextColor(matrix.ColorHSV(hue, 255, 255, true));
+  matrix.print(c);
+  hue += 7; if (hue >= 1536) hue -= 1536;
+}
+
+void readMorse(String str)
+{
+  if (str == "*-")
+    appendChar("A");
+  else if (str == "-***")
+    appendChar("B");
+  else if (str == "-*-*")
+    appendChar("C");
+  else if (str == "-**")
+    appendChar("D");
+  else if (str == "*")
+    appendChar("E");
+  else if (str == "**-*")
+    appendChar("F");
+  else if (str == "--*")
+    appendChar("G");
+  else if (str == "****")
+    appendChar("H");
+  else if (str == "**")
+    appendChar("I");
+  else if (str == "*---")
+    appendChar("J");
+  else if (str == "-*-")
+    appendChar("K");
+  else if (str == "*-**")
+    appendChar("L");
+  else if (str == "--")
+    appendChar("M");
+  else if (str == "-*")
+    appendChar("N");
+  else if (str == "---")
+    appendChar("O");
+  else if (str == "*--*")
+    appendChar("P");
+  else if (str == "--*-")
+    appendChar("Q");
+  else if (str == "*-*")
+    appendChar("R");
+  else if (str == "***")
+    appendChar("S");
+  else if (str == "-")
+    appendChar("T");
+  else if (str == "**-")
+    appendChar("U");
+  else if (str == "***-")
+    appendChar("V");
+  else if (str == "*--")
+    appendChar("W");
+  else if (str == "-**-")
+    appendChar("X");
+  else if (str == "-*--")
+    appendChar("Y");
+  else if (str == "--**")
+    appendChar("Z");
+
+  else if (str == "*----")
+    appendChar("1");
+  else if (str == "**---")
+    appendChar("2");
+  else if (str == "***--")
+    appendChar("3");
+  else if (str == "****-")
+    appendChar("4");
+  else if (str == "*****")
+    appendChar("5");
+  else if (str == "-****")
+    appendChar("6");
+  else if (str == "--***")
+    appendChar("7");
+  else if (str == "---**")
+    appendChar("8");
+  else if (str == "----*")
+    appendChar("9");
+  else if (str == "-----")
+    appendChar("0");
 }
