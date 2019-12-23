@@ -13,10 +13,12 @@
 #define Y    A4
 #define X    A5
 
+#define CURSOR_LIFE 5000
+
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
 int cursorX, cursorY = 0;
-boolean cursorOn = true;
+int cursorOn = CURSOR_LIFE;
 
 int textX[4] = {matrix.width(), matrix.width(), matrix.width(), matrix.width()};
 
@@ -74,7 +76,8 @@ void setGreen() {
 void (*setColor[COLORS])() = {setWhite, setYellow, setOrange, setRed, setPink, setAqua, setBlue, setNavy, setMagenta, setPurple, setGreen};
 
 void setup() {
-
+  Serial.begin(9600);
+  
   matrix.begin();
   fillBlack();
   setWhite();
@@ -92,6 +95,10 @@ void loop() {
   printCursor();
 }
 
+void refresh() {
+  fillBlack();
+}
+
 void checkColor() {
   int modeButton = digitalRead(MODE);
   if (modeButton == LOW) {
@@ -99,16 +106,20 @@ void checkColor() {
       nColor = 0;
     }
     (*setColor[nColor])();
+    cursorOn = CURSOR_LIFE;
   }
 }
 
 void printCursor() {
-  if (cursorOn) {
+  if (cursorOn > 0) {
     matrix.setCursor(cursorX, cursorY);
-    matrix.print("_");
-    cursorOn = false;
-  }
-  else {
-    cursorOn = true;
+    //Serial.println(cursorOn);
+    if((--cursorOn) > 0){
+      matrix.print("_");      
+    }
+    else {
+      //Serial.println("blank");
+      refresh();
+    }
   }
 }
