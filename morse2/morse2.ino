@@ -20,11 +20,14 @@
 #define DASH '-'
 #define NIL '\0'
 #define MAX_MORSE 5
+#define MAX_SCREEN 20
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
-char morse[MAX_MORSE] = {NIL, NIL, NIL, NIL, NIL};
+char morse[MAX_MORSE];
+char text[MAX_SCREEN];
 uint8_t mPos = 0;
+uint8_t sPos = 0;
 unsigned long signalStart = 0;
 bool dotWasPushed = false;
 bool dashWasPushed = false;
@@ -32,10 +35,9 @@ bool dashWasPushed = false;
 void setup() {
   //Serial.begin(9600);
   matrix.begin();
-  matrix.fillScreen(matrix.Color333(0, 0, 0));
-  matrix.setCursor(0, 0);
   matrix.setTextSize(1);
   matrix.setTextWrap(true);
+  clearScreen();
 
   pinMode(DOTB, INPUT_PULLUP);
   pinMode(DASHB, INPUT_PULLUP);
@@ -48,6 +50,22 @@ void setup() {
 
 void loop() {
   checkMorse();
+}
+
+void clearScreen() {
+  matrix.fillScreen(matrix.Color333(0, 0, 0));
+  matrix.setCursor(0, 0);
+  sPos = 0;
+  for (int i = 0; i < MAX_SCREEN; i++) {
+    text[i] = ' ';
+  }
+  clearMorse();
+}
+
+void clearMorse() {
+  for (int i = 0; i < MAX_MORSE; i++) {
+    morse[i] = NIL;
+  }
 }
 
 void checkMorse() {
@@ -86,7 +104,7 @@ void checkMorse() {
     {
       readMorse(morse);
       mPos = 0;
-      for (int i = 0; i < MAX_MORSE; i++) morse[i] = NIL;
+      clearMorse();
       //Serial.print("Morse after clearing:" ); Serial.println(morse);
     }
   }
@@ -95,9 +113,13 @@ void checkMorse() {
 }
 
 void appendChar(char c) {
+  if (sPos == MAX_SCREEN) {
+    clearScreen();
+  }
   //Serial.print("Append to screen: ");  Serial.println(c);
   matrix.setTextColor(matrix.ColorHSV(random(0, 1535), 255, 255, true));
   matrix.print(c);
+  text[sPos++] = c;
 }
 
 void readMorse(char str[])
