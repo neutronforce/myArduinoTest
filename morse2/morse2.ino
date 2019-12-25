@@ -26,12 +26,11 @@ RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 char morse[MAX_MORSE] = {NIL, NIL, NIL, NIL, NIL};
 uint8_t mPos = 0;
 unsigned long signalStart = 0;
-short hue = 0;
 bool dotWasPushed = false;
 bool dashWasPushed = false;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   matrix.begin();
   matrix.fillScreen(matrix.Color333(0, 0, 0));
   matrix.setCursor(0, 0);
@@ -97,15 +96,14 @@ void checkMorse() {
 
 void appendChar(char c) {
   //Serial.print("Append to screen: ");  Serial.println(c);
-  matrix.setTextColor(matrix.ColorHSV(hue, 255, 255, true));
+  matrix.setTextColor(matrix.ColorHSV(random(0, 1535), 255, 255, true));
   matrix.print(c);
-  hue += 7; if (hue >= 1536) hue -= 1536;
 }
 
 void readMorse(char str[])
 {
   //Serial.print("Decoding: ");
-  Serial.println(str);
+  //Serial.println(str);
   if (str[0] == DOT && str[1] == DASH && str[2] == NIL && str[3] == NIL && str[4] == NIL) {
     appendChar('A');
   }
