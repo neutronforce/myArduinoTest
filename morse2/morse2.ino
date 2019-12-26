@@ -1,4 +1,5 @@
 #include <RGBmatrixPanel.h>
+#include <EEPROM.h>
 
 #define CLK  8
 #define OE   9
@@ -21,6 +22,8 @@
 #define NIL '\0'
 #define MAX_MORSE 5
 #define MAX_SCREEN 20
+#define SAVED_SCREENS 4
+#define TEXT_MIN -100
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
@@ -28,9 +31,13 @@ char morse[MAX_MORSE];
 char text[MAX_SCREEN];
 uint8_t mPos = 0;
 uint8_t sPos = 0;
+uint8_t textX = matrix.width();
+uint8_t screen = 0;
+bool editMode = false;
 unsigned long signalStart = 0;
 bool dotWasPushed = false;
 bool dashWasPushed = false;
+bool modeWasPushed = false;
 
 void setup() {
   //Serial.begin(9600);
@@ -49,21 +56,63 @@ void setup() {
 }
 
 void loop() {
-  checkMorse();
+  if (editMode) {
+    checkMorse();
+  }
+  else {
+    scrollSavedScreens();
+  }
+  checkMode();
+}
+
+void checkMode() {
+  bool modePushed = (LOW == digitalRead(JOYB));
+  if (!modePushed && modeWasPushed) {
+    if (editMode) {
+      editMode = false;
+      saveScreen();
+    }
+    else {
+      editMode = true;
+    }
+    clearScreen();
+  }
+  modeWasPushed = modePushed;
+}
+
+void scrollSavedScreens() {
+  for (uint8_t s = 0; s < SAVED_SCREENS; s++) {
+    for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
+      setRandomTextColor();
+      matrix.setCursor((textX + i), (s * 8));
+      uint8_t si = (s * MAX_SCREEN) + i;
+      matrix.print(EEPROM.read(si));
+    }
+  }
+  if ((--textX) < TEXT_MIN) textX = matrix.width();
+}
+
+void saveScreen() {
+  for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
+    uint8_t si = (screen * MAX_SCREEN) + i;
+    if (EEPROM.read(si) != text[i]) {
+      EEPROM.write(si, text[i]);
+    }
+  }
 }
 
 void clearScreen() {
   matrix.fillScreen(matrix.Color333(0, 0, 0));
   matrix.setCursor(0, 0);
   sPos = 0;
-  for (int i = 0; i < MAX_SCREEN; i++) {
+  for (uint8_t i = 0; i < MAX_SCREEN; i++) {
     text[i] = ' ';
   }
   clearMorse();
 }
 
 void clearMorse() {
-  for (int i = 0; i < MAX_MORSE; i++) {
+  for (uint8_t i = 0; i < MAX_MORSE; i++) {
     morse[i] = NIL;
   }
 }
@@ -72,30 +121,30 @@ void checkMorse() {
 
   boolean dotPushed = (LOW == digitalRead(DOTB));
   boolean dashPushed = (LOW == digitalRead(DASHB));
-  //  if (dotPushed) Serial.println(" .dot btn pushed. ");
-  //  if (dashPushed) Serial.println(" -dash btn pushed- ");
+  //  if (dotPushed) Serial.println(F(" .dot btn pushed. "));
+  //  if (dashPushed) Serial.println(F(" -dash btn pushed- "));
 
   if ((dotPushed && dotWasPushed) || (dashPushed && dashWasPushed)) {
-    //    Serial.println("button still pushed");
+    //    Serial.println(F("button still pushed"));
   }
   else if ((!dotPushed && dotWasPushed) || (!dashPushed && dashWasPushed)) {
-    //    Serial.println("button released");
+    //    Serial.println(F("button released"));
     if ((millis() - signalStart) > DELAY) {
       if (dotWasPushed) {
-        //        Serial.println("DOT");
+        //Serial.println("DOT");
         morse[mPos++] = DOT;
       }
       else if (dashWasPushed) {
-        //        Serial.println("DASH");
+        //Serial.println("DASH");
         morse[mPos++] = DASH;
       }
     }
-    //Serial.print("Morse:" ); Serial.println(morse);
-    //Serial.print("mPos:" ); Serial.println(mPos);
+    //Serial.print(F("Morse:")); Serial.println(morse);
+    //Serial.print(F("mPos:")); Serial.println(mPos);
   }
   else if ((dotPushed && !dotWasPushed) || (dashPushed && !dashWasPushed))
   {
-    //Serial.println("button pushed");
+    //Serial.println(F("button pushed"));
     signalStart = millis();
   }
   else if ((!dotPushed && !dotWasPushed) && (!dashPushed && !dashWasPushed))
@@ -105,19 +154,23 @@ void checkMorse() {
       readMorse(morse);
       mPos = 0;
       clearMorse();
-      //Serial.print("Morse after clearing:" ); Serial.println(morse);
     }
   }
   dotWasPushed = dotPushed;
   dashWasPushed = dashPushed;
 }
 
+void setRandomTextColor() {
+  matrix.setTextColor(matrix.ColorHSV(random(0, 1535), 255, 255, true));
+}
+
 void appendChar(char c) {
   if (sPos == MAX_SCREEN) {
+    saveScreen();
     clearScreen();
   }
-  //Serial.print("Append to screen: ");  Serial.println(c);
-  matrix.setTextColor(matrix.ColorHSV(random(0, 1535), 255, 255, true));
+  //Serial.print(F("Append to screen: "));  Serial.println(c);
+  setRandomTextColor();
   matrix.print(c);
   text[sPos++] = c;
 }
