@@ -44,7 +44,7 @@ bool upWasMoved = false;
 bool downWasMoved = false;
 
 void setup() {
-  Serial.begin(9600);
+  //Serial.begin(9600);
   matrix.begin();
   matrix.setTextSize(1);
   matrix.setTextWrap(false);
@@ -86,7 +86,7 @@ void checkArrows() {
       text[--sPos] = ' ';
       matrix.fillScreen(matrix.Color333(0, 0, 0));
       matrix.setCursor(0, 0);
-      for (int i = 0; i < sPos; i++) {
+      for (uint8_t i = 0; i < sPos; i++) {
         setRandomTextColor();
         matrix.print(text[i]);
         //Serial.print(text[i]);
@@ -109,7 +109,7 @@ void checkArrows() {
       screen--;
       clearScreen();
       loadScreen();
-      Serial.print(F("screen: ")); Serial.println(screen);
+      //Serial.print(F("screen: ")); Serial.println(screen);
     }
   }
   else if (!downMove && downWasMoved) {
@@ -118,7 +118,7 @@ void checkArrows() {
       screen++;
       clearScreen();
       loadScreen();
-      Serial.print(F("screen: ")); Serial.println(screen);
+      //Serial.print(F("screen: ")); Serial.println(screen);
     }
   }
 
@@ -142,8 +142,8 @@ void checkMode() {
       //Serial.println(F("edit mode: false -> true."));
       editMode = true;
       matrix.setTextWrap(true);
+      loadScreen();
     }
-    clearScreen();
   }
   modeWasPushed = modePushed;
 }
@@ -168,7 +168,15 @@ void scrollSavedScreens() {
 }
 
 void loadScreen() {
-  //TODO
+  clearScreen();
+  for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
+    setRandomTextColor();
+    uint8_t si = (screen * MAX_SCREEN) + i;
+    char c = (char)EEPROM.read(si);
+    matrix.print(c);
+    text[sPos++] = c;
+    //Serial.print(c);
+  }
 }
 
 void saveScreen() {
