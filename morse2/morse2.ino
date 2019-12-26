@@ -76,16 +76,35 @@ void checkArrows() {
 
   bool leftMove = (x < 480);
   bool rightMove = (x > 544);
-  bool upMove = (y < 480);
-  bool downMove = (y > 544);
+  bool upMove = (y < 412);
+  bool downMove = (y > 612);
 
   if (!leftMove && leftWasMoved) {
-    //TODO backspace
+    //Serial.println(F("backspace"));
+    if (sPos > 0) {
+      clearMorse();
+      text[--sPos] = ' ';
+      matrix.fillScreen(matrix.Color333(0, 0, 0));
+      matrix.setCursor(0, 0);
+      for (int i = 0; i < sPos; i++) {
+        setRandomTextColor();
+        matrix.print(text[i]);
+        //Serial.print(text[i]);
+      }
+      //Serial.println(' ');  Serial.println(sPos);
+    }
   }
   else if (!rightMove && rightWasMoved) {
-    //TODO space
+    //Serial.println(F("space"));
+    if (sPos < MAX_SCREEN) {
+      clearMorse();
+      matrix.print(' ');
+      text[sPos++] = ' ';
+      //Serial.println(sPos);
+    }
   }
   else if (!upMove && upWasMoved) {
+    //screen up
     if (screen > 0) {
       screen--;
       clearScreen();
@@ -94,6 +113,7 @@ void checkArrows() {
     }
   }
   else if (!downMove && downWasMoved) {
+    //screen down
     if ((screen + 1) < SAVED_SCREENS) {
       screen++;
       clearScreen();
