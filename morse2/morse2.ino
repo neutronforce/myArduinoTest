@@ -22,8 +22,8 @@
 #define NIL '\0'
 #define MAX_MORSE 5
 #define MAX_SCREEN 20
-#define SAVED_SCREENS 4
-#define TEXT_MIN -100
+#define SAVED_SCREENS 1 //TODO set to 4
+#define TEXT_MIN -127
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
@@ -31,7 +31,7 @@ char morse[MAX_MORSE];
 char text[MAX_SCREEN];
 uint8_t mPos = 0;
 uint8_t sPos = 0;
-uint8_t textX = matrix.width();
+int8_t textX = matrix.width();
 uint8_t screen = 0;
 bool editMode = false;
 unsigned long signalStart = 0;
@@ -43,7 +43,7 @@ void setup() {
   //Serial.begin(9600);
   matrix.begin();
   matrix.setTextSize(1);
-  matrix.setTextWrap(true);
+  matrix.setTextWrap(false);
   clearScreen();
 
   pinMode(DOTB, INPUT_PULLUP);
@@ -68,12 +68,17 @@ void loop() {
 void checkMode() {
   bool modePushed = (LOW == digitalRead(JOYB));
   if (!modePushed && modeWasPushed) {
+    //Serial.println(F("mode button released."));
     if (editMode) {
+      //Serial.println(F("edit mode: true -> false."));
       editMode = false;
       saveScreen();
+      matrix.setTextWrap(false);
     }
     else {
+      //Serial.println(F("edit mode: false -> true."));
       editMode = true;
+      matrix.setTextWrap(true);
     }
     clearScreen();
   }
@@ -81,21 +86,29 @@ void checkMode() {
 }
 
 void scrollSavedScreens() {
+  delay(20);
+  clearScreen();
   for (uint8_t s = 0; s < SAVED_SCREENS; s++) {
+    matrix.setCursor(textX, (s * 8));
     for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
-      setRandomTextColor();
-      matrix.setCursor((textX + i), (s * 8));
       uint8_t si = (s * MAX_SCREEN) + i;
-      matrix.print(EEPROM.read(si));
+      char c = (char)EEPROM.read(si);
+      matrix.print(c);
+      //Serial.print(c);
     }
+    //Serial.println(' ');
   }
-  if ((--textX) < TEXT_MIN) textX = matrix.width();
+  if ((--textX) < TEXT_MIN) {
+    textX = matrix.width();
+    setRandomTextColor();
+  }
 }
 
 void saveScreen() {
   for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
     uint8_t si = (screen * MAX_SCREEN) + i;
-    if (EEPROM.read(si) != text[i]) {
+    char c = (char)EEPROM.read(si);
+    if (c != text[i]) {
       EEPROM.write(si, text[i]);
     }
   }
@@ -167,6 +180,7 @@ void setRandomTextColor() {
 void appendChar(char c) {
   if (sPos == MAX_SCREEN) {
     saveScreen();
+    if ((++screen) == SAVED_SCREENS) screen = 0;
     clearScreen();
   }
   //Serial.print(F("Append to screen: "));  Serial.println(c);
