@@ -22,7 +22,7 @@
 #define NIL '\0'
 #define MAX_MORSE 5
 #define MAX_SCREEN 20
-#define SAVED_SCREENS 1 //TODO set to 4
+#define SAVED_SCREENS 4
 #define TEXT_MIN -127
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
@@ -38,9 +38,13 @@ unsigned long signalStart = 0;
 bool dotWasPushed = false;
 bool dashWasPushed = false;
 bool modeWasPushed = false;
+bool leftWasMoved = false;
+bool rightWasMoved = false;
+bool upWasMoved = false;
+bool downWasMoved = false;
 
 void setup() {
-  //Serial.begin(9600);
+  Serial.begin(9600);
   matrix.begin();
   matrix.setTextSize(1);
   matrix.setTextWrap(false);
@@ -58,11 +62,50 @@ void setup() {
 void loop() {
   if (editMode) {
     checkMorse();
+    checkArrows();
   }
   else {
     scrollSavedScreens();
   }
   checkMode();
+}
+
+void checkArrows() {
+  int x = analogRead(XB);
+  int y = analogRead(YB);
+
+  bool leftMove = (x < 480);
+  bool rightMove = (x > 544);
+  bool upMove = (y < 480);
+  bool downMove = (y > 544);
+
+  if (!leftMove && leftWasMoved) {
+    //TODO backspace
+  }
+  else if (!rightMove && rightWasMoved) {
+    //TODO space
+  }
+  else if (!upMove && upWasMoved) {
+    if (screen > 0) {
+      screen--;
+      clearScreen();
+      loadScreen();
+      Serial.print(F("screen: ")); Serial.println(screen);
+    }
+  }
+  else if (!downMove && downWasMoved) {
+    if ((screen + 1) < SAVED_SCREENS) {
+      screen++;
+      clearScreen();
+      loadScreen();
+      Serial.print(F("screen: ")); Serial.println(screen);
+    }
+  }
+
+  leftWasMoved = leftMove;
+  rightWasMoved = rightMove;
+  upWasMoved = upMove;
+  downWasMoved = downMove;
 }
 
 void checkMode() {
@@ -102,6 +145,10 @@ void scrollSavedScreens() {
     textX = matrix.width();
     setRandomTextColor();
   }
+}
+
+void loadScreen() {
+  //TODO
 }
 
 void saveScreen() {
@@ -178,15 +225,12 @@ void setRandomTextColor() {
 }
 
 void appendChar(char c) {
-  if (sPos == MAX_SCREEN) {
-    saveScreen();
-    if ((++screen) == SAVED_SCREENS) screen = 0;
-    clearScreen();
+  if (sPos < MAX_SCREEN) {
+    //Serial.print(F("Append to screen: "));  Serial.println(c);
+    setRandomTextColor();
+    matrix.print(c);
+    text[sPos++] = c;
   }
-  //Serial.print(F("Append to screen: "));  Serial.println(c);
-  setRandomTextColor();
-  matrix.print(c);
-  text[sPos++] = c;
 }
 
 void readMorse(char str[])
