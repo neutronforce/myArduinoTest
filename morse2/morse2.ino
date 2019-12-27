@@ -81,18 +81,7 @@ void checkArrows() {
 
   if (!leftMove && leftWasMoved) {
     //Serial.println(F("backspace"));
-    if (sPos > 0) {
-      clearMorse();
-      text[--sPos] = ' ';
-      matrix.fillScreen(matrix.Color333(0, 0, 0));
-      matrix.setCursor(0, 0);
-      for (uint8_t i = 0; i < sPos; i++) {
-        setRandomTextColor();
-        matrix.print(text[i]);
-        //Serial.print(text[i]);
-      }
-      //Serial.println(' ');  Serial.println(sPos);
-    }
+    doBackSpace();
   }
   else if (!rightMove && rightWasMoved) {
     //Serial.println(F("space"));
@@ -196,6 +185,21 @@ void clearScreen() {
     text[i] = ' ';
   }
   clearMorse();
+}
+
+void doBackSpace() {
+  if (sPos > 0) {
+    clearMorse();
+    text[--sPos] = ' ';
+    matrix.fillScreen(matrix.Color333(0, 0, 0));
+    matrix.setCursor(0, 0);
+    for (uint8_t i = 0; i < sPos; i++) {
+      setRandomTextColor();
+      matrix.print(text[i]);
+      //Serial.print(text[i]);
+    }
+    //Serial.println(' ');  Serial.println(sPos);
+  }
 }
 
 void clearMorse() {
@@ -374,5 +378,8 @@ void readMorse(char str[])
   }
   else if (str[0] == DOT && str[1] == DOT && str[2] == DASH && str[3] == DASH && str[4] == NIL) {
     appendChar(' ');
+  }
+  else if (str[0] == DASH && str[1] == DASH && str[2] == DASH && str[3] == DASH && str[4] == NIL) {
+    doBackSpace();
   }
 }
