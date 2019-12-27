@@ -97,9 +97,8 @@ void checkArrows() {
   else if (!rightMove && rightWasMoved) {
     //Serial.println(F("space"));
     if (sPos < MAX_SCREEN) {
+      appendChar(' ');
       clearMorse();
-      matrix.print(' ');
-      text[sPos++] = ' ';
       //Serial.println(sPos);
     }
   }
