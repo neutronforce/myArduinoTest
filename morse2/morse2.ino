@@ -95,7 +95,6 @@ void checkArrows() {
     //screen up
     if (screen > 0) {
       screen--;
-      clearScreen();
       loadScreen();
       //Serial.print(F("screen: ")); Serial.println(screen);
     }
@@ -104,7 +103,6 @@ void checkArrows() {
     //screen down
     if ((screen + 1) < SAVED_SCREENS) {
       screen++;
-      clearScreen();
       loadScreen();
       //Serial.print(F("screen: ")); Serial.println(screen);
     }
@@ -157,7 +155,16 @@ void scrollSavedScreens() {
 
 void loadScreen() {
   clearScreen();
-  for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
+  int lastNonSpace = MAX_SCREEN;
+  while (--lastNonSpace >= 0 ) {
+    uint8_t si = (screen * MAX_SCREEN) + lastNonSpace;
+    char c = (char)EEPROM.read(si);
+    if (!isWhitespace(c)) {
+      break;
+    }
+  }
+
+  for (uint8_t i = 0 ; i <= lastNonSpace; i++ ) {
     setRandomTextColor();
     uint8_t si = (screen * MAX_SCREEN) + i;
     char c = (char)EEPROM.read(si);
