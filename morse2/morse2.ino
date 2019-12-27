@@ -278,6 +278,21 @@ void readMorse(char str[])
   if (str[0] == DOT && str[1] == DASH && str[2] == DOT && str[3] == DASH && str[4] == DOT && str[5] == DASH) {
     appendChar('.');
   }
+  else if (str[0] == DASH && str[1] == DASH && str[2] == DOT && str[3] == DOT && str[4] == DASH && str[5] == DASH) {
+    appendChar(',');
+  }
+  else if (str[0] == DOT && str[1] == DOT && str[2] == DASH && str[3] == DASH && str[4] == DOT && str[5] == DOT) {
+    appendChar('?');
+  }
+  else if (str[0] == DASH && str[1] == DOT && str[2] == DASH && str[3] == DOT && str[4] == DASH && str[5] == DASH) {
+    appendChar('!');
+  }
+  else if (str[0] == DOT && str[1] == DASH && str[2] == DASH && str[3] == DOT && str[4] == DASH && str[5] == DOT) {
+    appendChar('@');
+  }
+  else if (str[0] == DOT && str[1] == DASH && str[2] == DOT && str[3] == DOT && str[4] == DOT) {
+    appendChar('&');
+  }
   else if (str[0] == DOT && str[1] == DASH && str[2] == NIL && str[3] == NIL && str[4] == NIL) {
     appendChar('A');
   }
