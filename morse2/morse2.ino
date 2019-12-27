@@ -82,6 +82,8 @@ void checkArrows() {
   if (!leftMove && leftWasMoved) {
     //Serial.println(F("backspace"));
     doBackSpace();
+    upWasMoved = false;
+    downWasMoved = false;
   }
   else if (!rightMove && rightWasMoved) {
     //Serial.println(F("space"));
@@ -90,6 +92,8 @@ void checkArrows() {
       clearMorse();
       //Serial.println(sPos);
     }
+    upWasMoved = false;
+    downWasMoved = false;
   }
   else if (!upMove && upWasMoved) {
     //screen up
@@ -135,7 +139,7 @@ void checkMode() {
 }
 
 void scrollSavedScreens() {
-  delay(20);
+  delay(10);
   clearScreen();
   for (uint8_t s = 0; s < SAVED_SCREENS; s++) {
     matrix.setCursor(textX, (s * 8));
