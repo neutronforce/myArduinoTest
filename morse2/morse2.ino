@@ -20,7 +20,7 @@
 #define DOT '.'
 #define DASH '-'
 #define NIL '\0'
-#define MAX_MORSE 5
+#define MAX_MORSE 6
 #define MAX_SCREEN 20
 #define SAVED_SCREENS 4
 #define TEXT_MIN -127
@@ -275,7 +275,10 @@ void readMorse(char str[])
 {
   //Serial.print("Decoding: ");
   //Serial.println(str);
-  if (str[0] == DOT && str[1] == DASH && str[2] == NIL && str[3] == NIL && str[4] == NIL) {
+  if (str[0] == DOT && str[1] == DASH && str[2] == DOT && str[3] == DASH && str[4] == DOT && str[5] == DASH) {
+    appendChar('.');
+  }
+  else if (str[0] == DOT && str[1] == DASH && str[2] == NIL && str[3] == NIL && str[4] == NIL) {
     appendChar('A');
   }
   else if (str[0] == DASH && str[1] == DOT && str[2] == DOT && str[3] == DOT && str[4] == NIL) {
