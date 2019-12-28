@@ -139,7 +139,9 @@ void checkMode() {
     //Serial.println(F("mode button released."));
     if (mode == MODE_EDIT || mode == MODE_BOOT) {
       //Serial.println(F("edit mode: true -> false."));
-      saveScreen();
+      if (mode == MODE_EDIT){
+        saveScreen();
+      }
       mode = MODE_SCROLL;
       matrix.setTextWrap(false);
     }
