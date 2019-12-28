@@ -1,5 +1,6 @@
 #include <RGBmatrixPanel.h>
 #include <EEPROM.h>
+#include "rabbit.h"
 
 #define CLK  8
 #define OE   9
@@ -15,15 +16,21 @@
 #define XB    A5
 
 #define USHRT_MAX 65535
+#define IMAGE_DELAY 3000
 #define PAUSE 750
 #define DELAY 50
 #define DOT '.'
 #define DASH '-'
 #define NIL '\0'
+#define MAX_HUE 1535
 #define MAX_MORSE 6
 #define MAX_SCREEN 20
-#define SAVED_SCREENS 4
+#define LAST_SCREEN 4
+#define FIRST_SCREEN 1
 #define TEXT_MIN -127
+#define MODE_BOOT 0
+#define MODE_SCROLL 1
+#define MODE_EDIT 2
 
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
@@ -32,8 +39,8 @@ char text[MAX_SCREEN];
 uint8_t mPos = 0;
 uint8_t sPos = 0;
 int8_t textX = matrix.width();
-uint8_t screen = 0;
-bool editMode = false;
+uint8_t screen = FIRST_SCREEN;
+uint8_t mode = MODE_BOOT;
 unsigned long signalStart = 0;
 bool dotWasPushed = false;
 bool dashWasPushed = false;
@@ -57,14 +64,22 @@ void setup() {
   digitalWrite(DOTB, HIGH);
   digitalWrite(DASHB, HIGH);
   digitalWrite(JOYB, HIGH);
+
+  signalStart = millis() - IMAGE_DELAY;
 }
 
 void loop() {
-  if (editMode) {
+  if (mode == MODE_BOOT) {
+    if ((millis() - signalStart) > IMAGE_DELAY) {
+      signalStart = millis();
+      matrix.drawXBitmap(0, 0, img, 32, 32, matrix.ColorHSV(random(0, MAX_HUE), 255, 255, true));
+    }
+  }
+  else if (mode == MODE_EDIT) {
     checkMorse();
     checkArrows();
   }
-  else {
+  else if (mode == MODE_SCROLL) {
     scrollSavedScreens();
   }
   checkMode();
@@ -97,7 +112,7 @@ void checkArrows() {
   }
   else if (!upMove && upWasMoved) {
     //screen up
-    if (screen > 0) {
+    if (screen > FIRST_SCREEN) {
       screen--;
       loadScreen();
       //Serial.print(F("screen: ")); Serial.println(screen);
@@ -105,7 +120,7 @@ void checkArrows() {
   }
   else if (!downMove && downWasMoved) {
     //screen down
-    if ((screen + 1) < SAVED_SCREENS) {
+    if (screen < LAST_SCREEN) {
       screen++;
       loadScreen();
       //Serial.print(F("screen: ")); Serial.println(screen);
@@ -122,15 +137,15 @@ void checkMode() {
   bool modePushed = (LOW == digitalRead(JOYB));
   if (!modePushed && modeWasPushed) {
     //Serial.println(F("mode button released."));
-    if (editMode) {
+    if (mode == MODE_EDIT || mode == MODE_BOOT) {
       //Serial.println(F("edit mode: true -> false."));
-      editMode = false;
       saveScreen();
+      mode = MODE_SCROLL;
       matrix.setTextWrap(false);
     }
-    else {
+    else if (mode == MODE_SCROLL) {
       //Serial.println(F("edit mode: false -> true."));
-      editMode = true;
+      mode = MODE_EDIT;
       matrix.setTextWrap(true);
       loadScreen();
     }
@@ -139,21 +154,23 @@ void checkMode() {
 }
 
 void scrollSavedScreens() {
-  delay(10);
-  clearScreen();
-  for (uint8_t s = 0; s < SAVED_SCREENS; s++) {
-    matrix.setCursor(textX, (s * 8));
-    for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
-      uint8_t si = (s * MAX_SCREEN) + i;
-      char c = (char)EEPROM.read(si);
-      matrix.print(c);
-      //Serial.print(c);
+  if ((millis() - signalStart) > 10) {
+    signalStart = millis();
+    clearScreen();
+    for (uint8_t s = FIRST_SCREEN; s <= LAST_SCREEN; s++) {
+      matrix.setCursor(textX, ((s - FIRST_SCREEN) * 8));
+      for (uint8_t i = 0 ; i < MAX_SCREEN; i++ ) {
+        uint8_t si = (s * MAX_SCREEN) + i;
+        char c = (char)EEPROM.read(si);
+        matrix.print(c);
+        //Serial.print(c);
+      }
+      //Serial.println(' ');
     }
-    //Serial.println(' ');
-  }
-  if ((--textX) < TEXT_MIN) {
-    textX = matrix.width();
-    setRandomTextColor();
+    if ((--textX) < TEXT_MIN) {
+      textX = matrix.width();
+      setRandomTextColor();
+    }
   }
 }
 
@@ -263,7 +280,7 @@ void checkMorse() {
 }
 
 void setRandomTextColor() {
-  matrix.setTextColor(matrix.ColorHSV(random(0, 1535), 255, 255, true));
+  matrix.setTextColor(matrix.ColorHSV(random(0, MAX_HUE), 255, 255, true));
 }
 
 void appendChar(char c) {
