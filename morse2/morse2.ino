@@ -32,6 +32,15 @@
 #define MODE_SCROLL 1
 #define MODE_EDIT 2
 
+#define DOT_PUSHED 0
+#define DASH_PUSHED 1
+#define MODE_PUSHED 2
+#define LEFT_MOVED 3
+#define RIGHT_MOVED 4
+#define UP_MOVED 5
+#define DOWN_MOVED 6
+#define LOWER_CASE 7
+
 RGBmatrixPanel matrix(A, B, C, D, CLK, LAT, OE, false);
 
 char morse[MAX_MORSE];
@@ -42,13 +51,7 @@ int8_t textX = matrix.width();
 uint8_t screen = FIRST_SCREEN;
 uint8_t mode = MODE_BOOT;
 unsigned long signalStart = 0;
-bool dotWasPushed = false;
-bool dashWasPushed = false;
-bool modeWasPushed = false;
-bool leftWasMoved = false;
-bool rightWasMoved = false;
-bool upWasMoved = false;
-bool downWasMoved = false;
+byte wasPushed = 0;
 
 void setup() {
   //Serial.begin(9600);
@@ -86,6 +89,11 @@ void loop() {
 }
 
 void checkArrows() {
+  bool leftWasMoved = bitRead(wasPushed, LEFT_MOVED);
+  bool rightWasMoved = bitRead(wasPushed, RIGHT_MOVED);
+  bool upWasMoved = bitRead(wasPushed, UP_MOVED);
+  bool downWasMoved = bitRead(wasPushed, DOWN_MOVED);
+
   int x = analogRead(XB);
   int y = analogRead(YB);
 
@@ -127,19 +135,20 @@ void checkArrows() {
     }
   }
 
-  leftWasMoved = leftMove;
-  rightWasMoved = rightMove;
-  upWasMoved = upMove;
-  downWasMoved = downMove;
+  bitWrite(wasPushed, LEFT_MOVED, leftMove);
+  bitWrite(wasPushed, RIGHT_MOVED, rightMove);
+  bitWrite(wasPushed, UP_MOVED, upMove);
+  bitWrite(wasPushed, DOWN_MOVED, downMove);
 }
 
 void checkMode() {
+  bool modeWasPushed = bitRead(wasPushed, MODE_PUSHED);
   bool modePushed = (LOW == digitalRead(JOYB));
   if (!modePushed && modeWasPushed) {
     //Serial.println(F("mode button released."));
     if (mode == MODE_EDIT || mode == MODE_BOOT) {
       //Serial.println(F("edit mode: true -> false."));
-      if (mode == MODE_EDIT){
+      if (mode == MODE_EDIT) {
         saveScreen();
       }
       mode = MODE_SCROLL;
@@ -152,7 +161,7 @@ void checkMode() {
       loadScreen();
     }
   }
-  modeWasPushed = modePushed;
+  bitWrite(wasPushed, MODE_PUSHED, modePushed);
 }
 
 void scrollSavedScreens() {
@@ -239,9 +248,10 @@ void clearMorse() {
 }
 
 void checkMorse() {
-
-  boolean dotPushed = (LOW == digitalRead(DOTB));
-  boolean dashPushed = (LOW == digitalRead(DASHB));
+  bool dotWasPushed = bitRead(wasPushed, DOT_PUSHED);
+  bool dashWasPushed = bitRead(wasPushed, DASH_PUSHED);
+  bool dotPushed = (LOW == digitalRead(DOTB));
+  bool dashPushed = (LOW == digitalRead(DASHB));
   //  if (dotPushed) Serial.println(F(" .dot btn pushed. "));
   //  if (dashPushed) Serial.println(F(" -dash btn pushed- "));
 
@@ -277,8 +287,8 @@ void checkMorse() {
       clearMorse();
     }
   }
-  dotWasPushed = dotPushed;
-  dashWasPushed = dashPushed;
+  bitWrite(wasPushed, DOT_PUSHED, dotPushed);
+  bitWrite(wasPushed, DASH_PUSHED, dashPushed);
 }
 
 void setRandomTextColor() {
@@ -287,6 +297,9 @@ void setRandomTextColor() {
 
 void appendChar(char c) {
   if (sPos < MAX_SCREEN) {
+    if (bitRead(wasPushed, LOWER_CASE)) {
+      c = tolower(c);
+    }
     //Serial.print(F("Append to screen: "));  Serial.println(c);
     setRandomTextColor();
     matrix.print(c);
@@ -298,7 +311,10 @@ void readMorse(char str[])
 {
   //Serial.print("Decoding: ");
   //Serial.println(str);
-  if (str[0] == DOT && str[1] == DASH && str[2] == DOT && str[3] == DASH && str[4] == DOT && str[5] == DASH) {
+  if (str[0] == DOT && str[1] == DOT && str[2] == DOT && str[3] == DOT && str[4] == DASH && str[5] == DOT) {
+    wasPushed ^= 1UL << LOWER_CASE; //switch case
+  }
+  else if (str[0] == DOT && str[1] == DASH && str[2] == DOT && str[3] == DASH && str[4] == DOT && str[5] == DASH) {
     appendChar('.');
   }
   else if (str[0] == DASH && str[1] == DASH && str[2] == DOT && str[3] == DOT && str[4] == DASH && str[5] == DASH) {
@@ -357,6 +373,9 @@ void readMorse(char str[])
   }
   else if (str[0] == DASH && str[1] == DOT && str[2] == NIL && str[3] == NIL && str[4] == NIL) {
     appendChar('N');
+  }
+  else if (str[0] == DASH && str[1] == DASH && str[2] == DOT && str[3] == DASH && str[4] == DASH) {
+    appendChar('\xA5'); //Ñ
   }
   else if (str[0] == DASH && str[1] == DASH && str[2] == DASH && str[3] == NIL && str[4] == NIL) {
     appendChar('O');
